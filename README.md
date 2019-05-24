@@ -15,6 +15,13 @@ Api permettant la consultation de la base des pieces de collection de la Monnaie
 | Permet de recuperer les pieces dont la valeur est superieur à 2 euros (trié par ordre decroissant) | | /pieces/my/top |
 
 
+## Ressources
+
+https://thierry-leriche-dessirier.developpez.com/tutoriels/java/vertx/creer-lancer-tester-verticle/
+
+https://vertx.io/docs/vertx-mongo-client/java/
+
+
 
 
 
