@@ -1,5 +1,7 @@
 package monnaieparis.api;
 
+
+import java.time.LocalDateTime;
 import java.util.List;
 
 import com.google.gson.Gson;
@@ -12,6 +14,7 @@ import io.vertx.ext.mongo.FindOptions;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
 import io.vertx.ext.web.RoutingContext;
+import io.vertx.ext.web.handler.CorsHandler;
 /**
  * 
  * @author AB
@@ -28,7 +31,20 @@ public class PiecesVerticle extends AbstractVerticle {
 	public void start(final Future<Void> startFuture) throws Exception {
 
 		final Router router = Router.router(vertx);
-
+		
+		
+		router.route().handler(CorsHandler.create("*")
+				.allowedMethod(io.vertx.core.http.HttpMethod.GET)
+				.allowedMethod(io.vertx.core.http.HttpMethod.POST)
+				.allowedMethod(io.vertx.core.http.HttpMethod.OPTIONS)
+				.allowedHeader("Access-Control-Request-Method")
+				.allowedHeader("Access-Control-Allow-Credentials")
+				.allowedHeader("Access-Control-Allow-Origin")
+				.allowedHeader("Access-Control-Allow-Headers")
+				.allowedHeader("Content-Type"));
+		
+		
+		
 		router.get("/pieces").handler(this::getAllPieces);
 		router.get("/pieces/my").handler(this::getMyPieces);
 		router.get("/pieces/my/:id").handler(this::setPiecePossession);
@@ -98,17 +114,24 @@ public class PiecesVerticle extends AbstractVerticle {
 	 * Permet de marquer une piece comme possedee
 	 */
 	private void setPiecePossession(RoutingContext ctx) {
-
-		String nom = new String(ctx.request().getParam("id"));
-		JsonObject query = new JsonObject().put("_id", nom);
-		JsonObject update = new JsonObject().put("$set", new JsonObject().put("isPossede", true));
-		getClient().updateCollection("PiecesMonnaieParis", query, update, res -> {
-			if (res.succeeded()) {
-				generateJson(ctx).end(query.encode());
-			} else {
-				res.cause().printStackTrace();
-			}
-		});
+		
+		LocalDateTime newdate = LocalDateTime.now();
+		try {
+			String nom = new String(ctx.request().getParam("id"));
+			JsonObject query = new JsonObject().put("_id", nom);
+			JsonObject update = new JsonObject().put("$set", new JsonObject().put("isPossede", true).put("dateAcquisition", newdate.toString()));
+			getClient().updateCollection("PiecesMonnaieParis", query, update, res -> {
+				if (res.succeeded()) {
+					generateJson(ctx).end(query.encode());
+				} else {
+					res.cause().printStackTrace();
+				}
+			});
+		
+		}catch(Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
 
 	}
 
