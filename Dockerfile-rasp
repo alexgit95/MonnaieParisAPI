@@ -1,0 +1,14 @@
+FROM maven:3.6.1-jdk-11-slim AS builder
+
+COPY . /src
+WORKDIR /src
+RUN mvn package
+RUN ls /src/target
+
+FROM arm64v8/openjdk:11-slim
+COPY --from=builder /src/target /apps
+COPY src/main/java/resources/index.html /apps/monnaie.html
+COPY props.properties /apps/props.properties
+WORKDIR /apps
+EXPOSE 8181
+ENTRYPOINT ["java", "-jar", "MonnaieParisAPI-0.0.1-SNAPSHOT-fat.jar"]
