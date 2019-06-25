@@ -21,6 +21,36 @@ https://thierry-leriche-dessirier.developpez.com/tutoriels/java/vertx/creer-lanc
 
 https://vertx.io/docs/vertx-mongo-client/java/
 
+## Comment lancer l'application ?
+
+```
+
+git clone https://github.com/alexgit95/MonnaieParisAPI.git
+
+```
+
+Modifier le fichier props.properties (exemple avec mongodb atlas) :
+
+```
+
+host1=cluster0-shard-00-00-XXX.mongodb.net
+host2=cluster0-shard-00-01-XXX.mongodb.net
+host3=cluster0-shard-00-02-XXX.mongodb.net
+db_name=DBNAME
+username=(utilisateur configuré sur votre mongo)
+password=(mot de passe configure par l'utilisateur)
+
+```
+
+Puis faire :
+
+```
+
+docker build -t MonnaieParis .
+
+docker run -p 8181:8181 MonnaieParis
+
+```
 
 
 

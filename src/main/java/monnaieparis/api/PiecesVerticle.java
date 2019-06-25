@@ -1,19 +1,19 @@
 package monnaieparis.api;
 
-<<<<<<< HEAD
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
-=======
-
 import java.time.LocalDateTime;
->>>>>>> 2fa645fe63e62b505fbc10dbd035c1080558b555
 import java.util.List;
 
 import org.apache.commons.io.FileUtils;
 
 import com.google.gson.Gson;
 
+import io.vertx.config.ConfigRetriever;
+import io.vertx.config.ConfigRetrieverOptions;
+import io.vertx.config.ConfigStoreOptions;
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
@@ -34,6 +34,8 @@ public class PiecesVerticle extends AbstractVerticle {
 	private Gson gson = new Gson();
 	
 	private String contentClient;
+	
+	private JsonObject config;
 
 	/**
 	 * Methode principale Vertx
@@ -42,14 +44,14 @@ public class PiecesVerticle extends AbstractVerticle {
 	public void start(final Future<Void> startFuture) throws Exception {
 
 		final Router router = Router.router(vertx);
-<<<<<<< HEAD
+
 		contentClient=FileUtils.readFileToString(
-				new File("/var/www/html/monnaie.html"),
+				new File("/apps/monnaie.html"),
 				Charset.forName("UTF-8"));
-		System.setProperty("org.mongodb.async.type", "netty");
-		router.get("/monnaie.html").handler(this::getClientHtml);
-=======
 		
+		router.get("/monnaie.html").handler(this::getClientHtml);
+
+		System.setProperty("org.mongodb.async.type", "netty");
 		
 		router.route().handler(CorsHandler.create("*")
 				.allowedMethod(io.vertx.core.http.HttpMethod.GET)
@@ -63,7 +65,7 @@ public class PiecesVerticle extends AbstractVerticle {
 		
 		
 		
->>>>>>> 2fa645fe63e62b505fbc10dbd035c1080558b555
+
 		router.get("/pieces").handler(this::getAllPieces);
 		router.get("/pieces/backup").handler(this::backup);
 		router.get("/pieces/my").handler(this::getMyPieces);
@@ -71,6 +73,29 @@ public class PiecesVerticle extends AbstractVerticle {
 		router.get("/pieces/missing").handler(this::getPiecesManquantes);
 		router.get("/pieces/missing/:lattitude/:longitude").handler(this::getPiecesManquantesPlusProche);
 		router.get("/pieces/mytop").handler(this::getPiecesRentable);
+		
+		
+		ConfigStoreOptions fileStore = new ConfigStoreOptions()
+				  .setType("file")
+				  .setFormat("properties")
+				  .setConfig(new JsonObject().put("path", "props.properties"));
+		
+		ConfigRetrieverOptions options = new ConfigRetrieverOptions()
+				  .addStore(fileStore);
+		
+		ConfigRetriever retriever = ConfigRetriever.create(vertx, options);
+		
+		retriever.getConfig(ar -> {
+			  if (ar.failed()) {
+			   System.out.println("Erreur lors du chargement du fichier config");
+			  } else {
+			    config = ar.result();
+			    
+			  }
+			});
+		
+		
+		
 
 		vertx.createHttpServer().requestHandler(router) 
 				.listen(8181, res -> {
@@ -138,20 +163,7 @@ public class PiecesVerticle extends AbstractVerticle {
 	 * Permet de marquer une piece comme possedee
 	 */
 	private void setPiecePossession(RoutingContext ctx) {
-<<<<<<< HEAD
-		String id=new String(ctx.request().getParam("id"));
-		System.out.println(id);
-		JsonObject query = new JsonObject().put("_id", id);
-		JsonObject update = new JsonObject().put("$set", new JsonObject().put("isPossede", true));
-				getClient().updateCollection("PiecesMonnaieParis", query, update, res -> {
-				  if (res.succeeded()) {
-					  generateJson(ctx).end(query.encode());
-				  } else {
-				    res.cause().printStackTrace();
-				  }
-				});
-=======
-		
+
 		LocalDateTime newdate = LocalDateTime.now();
 		try {
 			String nom = new String(ctx.request().getParam("id"));
@@ -170,7 +182,6 @@ public class PiecesVerticle extends AbstractVerticle {
 			throw e;
 		}
 
->>>>>>> 2fa645fe63e62b505fbc10dbd035c1080558b555
 	}
 
 	
@@ -231,7 +242,25 @@ public class PiecesVerticle extends AbstractVerticle {
 	private MongoClient getClient() {
 		
 		
-		return MongoClient.createShared(vertx, new JsonObject());
+		try {
+		JsonArray hostTable= new JsonArray()
+				.add(new JsonObject().put("host", config.getString("host1")).put("port", 27017));
+				hostTable.add(new JsonObject().put("host", config.getString("host2")).put("port", 27017));
+				hostTable.add(new JsonObject().put("host", config.getString("host3")).put("port", 27017));
+
+
+				JsonObject config2 = new JsonObject().put("hosts",hostTable);
+				config2.put("db_name", config.getString("db_name"));
+				config2.put("username", config.getString("username"));
+				config2.put("password", config.getString("password"));
+				config2.put("ssl", true);
+				config2.put("authSource","admin");
+
+				return MongoClient.createShared(vertx, config2);
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return null;
 	}
 	
 	private void getClientHtml(RoutingContext ctx) {
