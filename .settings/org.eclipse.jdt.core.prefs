@@ -1,3 +1,8 @@
+<<<<<<< HEAD
+=======
+#Mon May 27 09:39:44 CEST 2019
+org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.8
+>>>>>>> 2fa645fe63e62b505fbc10dbd035c1080558b555
 eclipse.preferences.version=1
 org.eclipse.jdt.core.compiler.codegen.targetPlatform=1.8
 org.eclipse.jdt.core.compiler.compliance=1.8
