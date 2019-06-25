@@ -27,6 +27,8 @@ https://vertx.io/docs/vertx-mongo-client/java/
 
 git clone https://github.com/alexgit95/MonnaieParisAPI.git
 
+cd MonnaieParisAPI
+
 ```
 
 Modifier le fichier props.properties (exemple avec mongodb atlas) :
@@ -46,9 +48,9 @@ Puis faire :
 
 ```
 
-docker build -t MonnaieParis .
+docker build -t monnaieparis .
 
-docker run -p 8181:8181 MonnaieParis
+docker run -p 8181:8181 monnaieparis
 
 ```
 
