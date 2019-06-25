@@ -1,14 +1,18 @@
 package monnaieparis.api;
 
+import java.io.File;
+import java.io.IOException;
 import java.nio.charset.Charset;
-import java.util.Base64;
 import java.util.List;
+
+import org.apache.commons.io.FileUtils;
 
 import com.google.gson.Gson;
 
 import io.vertx.core.AbstractVerticle;
 import io.vertx.core.Future;
 import io.vertx.core.http.HttpServerResponse;
+import io.vertx.core.json.JsonArray;
 import io.vertx.core.json.JsonObject;
 import io.vertx.ext.mongo.MongoClient;
 import io.vertx.ext.web.Router;
@@ -17,13 +21,20 @@ import io.vertx.ext.web.RoutingContext;
 public class PiecesVerticle extends AbstractVerticle {
 
 	private Gson gson = new Gson();
+	
+	private String contentClient;
 
 	@Override
 	public void start(final Future<Void> startFuture) throws Exception {
 
 		final Router router = Router.router(vertx);
-
+		contentClient=FileUtils.readFileToString(
+				new File("/var/www/html/monnaie.html"),
+				Charset.forName("UTF-8"));
+		System.setProperty("org.mongodb.async.type", "netty");
+		router.get("/monnaie.html").handler(this::getClientHtml);
 		router.get("/pieces").handler(this::getAllPieces);
+		router.get("/pieces/backup").handler(this::backup);
 		router.get("/pieces/my").handler(this::getMyPieces);
 		router.get("/pieces/my/:id").handler(this::setPiecePossession);
 		router.get("/pieces/missing").handler(this::getPiecesManquantes);
@@ -75,7 +86,7 @@ public class PiecesVerticle extends AbstractVerticle {
 	}
 
 	private void getPiecesManquantes(RoutingContext ctx) {
-
+		try {
 		JsonObject query = new JsonObject().put("isPossede", false);
 		getClient().find("PiecesMonnaieParis", query, res -> {
 			if (res.succeeded()) {
@@ -85,13 +96,16 @@ public class PiecesVerticle extends AbstractVerticle {
 				res.cause().printStackTrace();
 			}
 		});
+		}catch(Exception e) {
+			e.printStackTrace();
+			throw e;
+		}
 	}
 
 	private void setPiecePossession(RoutingContext ctx) {
-		String nom=new String(Base64.getDecoder().decode(ctx.request().getParam("id")),Charset.forName("ISO-8859-1"));
-		System.out.println(nom);
-		JsonObject query = new JsonObject().put("nom", nom);
-				// Set the author field
+		String id=new String(ctx.request().getParam("id"));
+		System.out.println(id);
+		JsonObject query = new JsonObject().put("_id", id);
 		JsonObject update = new JsonObject().put("$set", new JsonObject().put("isPossede", true));
 				getClient().updateCollection("PiecesMonnaieParis", query, update, res -> {
 				  if (res.succeeded()) {
@@ -115,9 +129,32 @@ public class PiecesVerticle extends AbstractVerticle {
 	}
 
 	private MongoClient getClient() {
-		JsonObject config = new JsonObject().put("host", "localhost");
-		config.put("port", 27017).put("db_name", "monnaieparis");
-		return MongoClient.createShared(vertx, config);
+		
+		
+		return MongoClient.createShared(vertx, new JsonObject());
+	}
+	
+	private void getClientHtml(RoutingContext ctx) {
+		
+			ctx.response().putHeader("content-type", "text/html").end(contentClient);
+		
+	}
+	
+	private void backup(RoutingContext ctx) {
+		JsonObject query = new JsonObject();
+		getClient().find("PiecesMonnaieParis", query, res -> {
+			if (res.succeeded()) {
+				String json = gson.toJson(res.result(), List.class);
+				try {
+					FileUtils.write(new File("../backup/backupMonnaie.json"), json, Charset.forName("UTF-8"));
+				} catch (IOException e) {
+					e.printStackTrace();
+				}
+				generateJson(ctx).end(gson.toJson(res.result(), List.class));
+			} else {
+				res.cause().printStackTrace();
+			}
+		});
 	}
 
 }
