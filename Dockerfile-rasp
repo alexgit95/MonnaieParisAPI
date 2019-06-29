@@ -5,7 +5,7 @@ WORKDIR /src
 RUN mvn package
 RUN ls /src/target
 
-FROM arm64v8/openjdk:11-slim
+FROM resin/raspberry-pi-openjdk
 COPY --from=builder /src/target /apps
 COPY src/main/java/resources/index.html /apps/monnaie.html
 COPY props.properties /apps/props.properties

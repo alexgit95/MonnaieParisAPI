@@ -12,7 +12,7 @@ Api permettant la consultation de la base des pieces de collection de la Monnaie
 | Permet de marquer une piece comme Ã©tant en ma possession | | /pieces/my/{idPiece} |
 | Permet de recuperer les pieces que je ne possede pas | | /pieces/missing |
 | Permet de recuperer la piece manquante la plus proche d'une position | | /pieces/missing/{lattitude}/{longitude} |
-| Permet de recuperer les pieces dont la valeur est superieur Ã  2 euros (triÃ© par ordre decroissant) | | /pieces/my/top |
+| Permet de recuperer les pieces dont la valeur est superieur à 2 euros (triés par ordre decroissant) | | /pieces/my/top |
 
 
 ## Ressources
@@ -50,10 +50,23 @@ Puis faire :
 
 docker build -t monnaieparis .
 
-docker run -p 8181:8181 monnaieparis
+```
+
+Ou sur un raspberry
 
 ```
 
+docker build -t monnaieparis -f Dockerfile-rasp  .
+
+```
+
+Puis pour finir :
+
+```
+
+docker run -p 8181:8181 monnaieparis
+
+```
 
 
 
